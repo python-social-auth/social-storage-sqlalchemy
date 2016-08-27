@@ -1,2 +1,3 @@
 six
-python-social-auth-core
+sqlalchemy
+social-auth-core

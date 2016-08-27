@@ -14,8 +14,8 @@ from sqlalchemy.types import PickleType, Text
 from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy.ext.mutable import MutableDict
 
-from social.storage import UserMixin, AssociationMixin, NonceMixin, \
-                           CodeMixin, BaseStorage
+from social_core.storage import UserMixin, AssociationMixin, NonceMixin, \
+                                CodeMixin, BaseStorage
 
 
 # JSON type field
