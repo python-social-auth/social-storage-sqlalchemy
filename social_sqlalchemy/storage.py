@@ -15,7 +15,7 @@ from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy.ext.mutable import MutableDict
 
 from social_core.storage import UserMixin, AssociationMixin, NonceMixin, \
-                                CodeMixin, BaseStorage
+                                CodeMixin, PartialMixin, BaseStorage
 
 
 # JSON type field
@@ -226,11 +226,31 @@ class SQLAlchemyCodeMixin(SQLAlchemyMixin, CodeMixin):
         return cls._query().filter(cls.code == code).first()
 
 
+class SQLAlchemyPartialMixin(SQLAlchemyMixin, PartialMixin):
+    __tablename__ = 'social_auth_partial'
+    id = Column(Integer, primary_key=True)
+    token = Column(String(32), index=True)
+    data = Column(MutableDict.as_mutable(JSONType))
+    next_step = Column(Integer)
+    backend = Column(String(32))
+
+    @classmethod
+    def load(cls, token):
+        return cls._query().filter(cls.token == token).first()
+
+    @classmethod
+    def destroy(cls, token):
+        partial = cls.load(token)
+        if partial:
+            partial.delete()
+
+
 class BaseSQLAlchemyStorage(BaseStorage):
     user = SQLAlchemyUserMixin
     nonce = SQLAlchemyNonceMixin
     association = SQLAlchemyAssociationMixin
     code = SQLAlchemyCodeMixin
+    partial = SQLAlchemyPartialMixin
 
     @classmethod
     def is_integrity_error(cls, exception):
