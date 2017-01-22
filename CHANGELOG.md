@@ -13,3 +13,5 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Chaged
 - Split from the monolitic [python-social-auth](https://github.com/omab/python-social-auth)
   codebase
+- Fixed the JSON pickler implementation to complain SQLAlchemy
+  invocation of the `dumps` method
