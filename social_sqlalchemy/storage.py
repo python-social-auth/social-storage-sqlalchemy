@@ -256,7 +256,7 @@ class SQLAlchemyPartialMixin(SQLAlchemyMixin, PartialMixin):
     def destroy(cls, token):
         partial = cls.load(token)
         if partial:
-            partial.delete()
+            cls._session().delete(partial)
 
 
 class BaseSQLAlchemyStorage(BaseStorage):
