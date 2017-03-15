@@ -12,6 +12,7 @@ from sqlalchemy import Column, Integer, String
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.types import PickleType, Text
 from sqlalchemy.schema import UniqueConstraint
+from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.mutable import MutableDict
 
 from social_core.storage import UserMixin, AssociationMixin, NonceMixin, \
@@ -87,10 +88,13 @@ class SQLAlchemyUserMixin(SQLAlchemyMixin, UserMixin):
     __table_args__ = (UniqueConstraint('provider', 'uid'),)
     id = Column(Integer, primary_key=True)
     provider = Column(String(32))
-    extra_data = Column(MutableDict.as_mutable(JSONType))
     uid = None
     user_id = None
     user = None
+
+    @declared_attr
+    def extra_data(cls):
+        return Column(MutableDict.as_mutable(JSONType))
 
     @classmethod
     def changed(cls, user):
