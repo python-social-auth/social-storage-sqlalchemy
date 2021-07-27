@@ -29,8 +29,8 @@ setup(
         'Intended Audience :: Developers',
         'Environment :: Web Environment',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3'
     ],
+    python_requires='>=3.6',
     zip_safe=False
 )
