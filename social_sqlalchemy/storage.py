@@ -209,7 +209,10 @@ class SQLAlchemyNonceMixin(SQLAlchemyMixin, NonceMixin):
     @classmethod
     def use(cls, server_url, timestamp, salt):
         kwargs = {  # fix: skip
-            "server_url": server_url, "timestamp": timestamp, "salt": salt}
+            "server_url": server_url,
+            "timestamp": timestamp,
+            "salt": salt,
+        }
         try:
             return cls._session().scalar(cls._query().filter_by(**kwargs))
         except IndexError:
@@ -234,7 +237,7 @@ class SQLAlchemyAssociationMixin(SQLAlchemyMixin, AssociationMixin):
             assoc = cls._session().scalar(  # fix: skip
                 cls._query().filter_by(
                     server_url=server_url,  # fix: skip
-                    handle=association.handle  # fix: skip
+                    handle=association.handle,  # fix: skip
                 )
             )
         except IndexError:
@@ -252,10 +255,9 @@ class SQLAlchemyAssociationMixin(SQLAlchemyMixin, AssociationMixin):
     @classmethod
     def remove(cls, ids_to_delete):
         cls._session().execute(
-            delete(cls._query().where(  # fix: skip
-                cls.id.in_(ids_to_delete))).execution_options(
-                synchronize_session="fetch"
-            )
+            delete(
+                cls._query().where(cls.id.in_(ids_to_delete))  # fix: skip
+            ).execution_options(synchronize_session="fetch")
         )
 
 
