@@ -21,6 +21,7 @@ from sqlalchemy.ext.mutable import MutableDict
 from social_core.storage import UserMixin, AssociationMixin, NonceMixin, \
                                 CodeMixin, PartialMixin, BaseStorage
 
+
 class JSONPickler(object):
     """JSON pickler wrapper around json lib since SQLAlchemy invokes
     dumps with extra positional parameters"""
@@ -119,7 +120,7 @@ class SQLAlchemyUserMixin(SQLAlchemyMixin, UserMixin):
             valid_password = user.has_usable_password()
         else:
             valid_password = True
-        
+
         qs_count = cls._session().scalar(
             select(func.count()).
             select_from(qs.subquery())
@@ -227,8 +228,9 @@ class SQLAlchemyAssociationMixin(SQLAlchemyMixin, AssociationMixin):
     def store(cls, server_url, association):
         # Don't use get_or_create because issued cannot be null
         try:
-            assoc = cls._session().scalar(cls._query().filter_by(server_url=server_url,
-                                           handle=association.handle))
+            assoc = cls._session().scalar(  # fix: skip
+                cls._query().filter_by(server_url=server_url,  # fix: skip
+                                       handle=association.handle))
         except IndexError:
             assoc = cls(server_url=server_url,
                         handle=association.handle)
@@ -265,7 +267,8 @@ class SQLAlchemyPartialMixin(SQLAlchemyMixin, PartialMixin):
     __tablename__ = 'social_auth_partial'
     id: Mapped[int] = mapped_column(primary_key=True)
     token: Mapped[str] = mapped_column(String(32), index=True)
-    data: Mapped[dict[str, str]] = mapped_column(MutableDict.as_mutable(JSONType))
+    data: Mapped[dict[str, str]] = mapped_column(  # fix: skip
+        MutableDict.as_mutable(JSONType))
     next_step: Mapped[int] = mapped_column()
     backend: Mapped[str] = mapped_column(String(32))
 
