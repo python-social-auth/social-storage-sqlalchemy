@@ -1,28 +1,33 @@
 """SQLAlchemy models for Social Auth"""
+
 import base64
+import json
 from typing import Optional
 
 import six
-import json
 
 try:
     import transaction
 except ImportError:
     transaction = None
 
-from sqlalchemy import select, delete, String, func, Integer
+from social_core.storage import (
+    AssociationMixin,
+    BaseStorage,
+    CodeMixin,
+    NonceMixin,
+    PartialMixin,
+    UserMixin,
+)
+from sqlalchemy import Integer, String, delete, func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.types import PickleType, Text
-from sqlalchemy.schema import UniqueConstraint
-
-from sqlalchemy.orm import declared_attr, Mapped, mapped_column
 from sqlalchemy.ext.mutable import MutableDict
+from sqlalchemy.orm import Mapped, declared_attr, mapped_column
+from sqlalchemy.schema import UniqueConstraint
+from sqlalchemy.types import PickleType, Text
 
-from social_core.storage import UserMixin, AssociationMixin, NonceMixin, \
-                                CodeMixin, PartialMixin, BaseStorage
 
-
-class JSONPickler(object):
+class JSONPickler:
     """JSON pickler wrapper around json lib since SQLAlchemy invokes
     dumps with extra positional parameters"""
 
@@ -42,16 +47,16 @@ class JSONType(PickleType):
     impl = Text
 
     def __init__(self, *args, **kwargs):
-        kwargs['pickler'] = JSONPickler
-        super(JSONType, self).__init__(*args, **kwargs)
+        kwargs["pickler"] = JSONPickler
+        super().__init__(*args, **kwargs)
 
 
-class SQLAlchemyMixin(object):
+class SQLAlchemyMixin:
     COMMIT_SESSION = True
 
     @classmethod
     def _session(cls):
-        raise NotImplementedError('Implement in subclass')
+        raise NotImplementedError("Implement in subclass")
 
     @classmethod
     def _query(cls):
@@ -88,8 +93,9 @@ class SQLAlchemyMixin(object):
 
 class SQLAlchemyUserMixin(SQLAlchemyMixin, UserMixin):
     """Social Auth association model"""
-    __tablename__ = 'social_auth_usersocialauth'
-    __table_args__ = (UniqueConstraint('provider', 'uid'),)
+
+    __tablename__ = "social_auth_usersocialauth"
+    __table_args__ = (UniqueConstraint("provider", "uid"),)
     id: Mapped[int] = mapped_column(primary_key=True)
     provider: Mapped[str] = mapped_column(String(32))
     uid: Mapped[str] = mapped_column(String(255))
@@ -105,7 +111,7 @@ class SQLAlchemyUserMixin(SQLAlchemyMixin, UserMixin):
         cls._save_instance(user)
 
     def set_extra_data(self, extra_data=None):
-        if super(SQLAlchemyUserMixin, self).set_extra_data(extra_data):
+        if super().set_extra_data(extra_data):
             self._save_instance(self)
 
     @classmethod
@@ -116,14 +122,13 @@ class SQLAlchemyUserMixin(SQLAlchemyMixin, UserMixin):
             qs = cls._query().where(cls.provider != backend_name)
         qs = qs.where(cls.user == user)
 
-        if hasattr(user, 'has_usable_password'):  # TODO
+        if hasattr(user, "has_usable_password"):  # TODO
             valid_password = user.has_usable_password()
         else:
             valid_password = True
 
         qs_count = cls._session().scalar(
-            select(func.count()).
-            select_from(qs.subquery())
+            select(func.count()).select_from(qs.subquery())
         )
 
         return valid_password or qs_count > 0
@@ -146,15 +151,14 @@ class SQLAlchemyUserMixin(SQLAlchemyMixin, UserMixin):
         stmt = cls.user_query().filter_by(*args, **kwargs)
 
         user_count = cls._session().scalar(
-            select(func.count()).
-            select_from(stmt.subquery())
+            select(func.count()).select_from(stmt.subquery())
         )
 
         return user_count > 0
 
     @classmethod
     def get_username(cls, user):
-        return getattr(user, 'username', None)
+        return getattr(user, "username", None)
 
     @classmethod
     def create_user(cls, *args, **kwargs):
@@ -170,11 +174,12 @@ class SQLAlchemyUserMixin(SQLAlchemyMixin, UserMixin):
 
     @classmethod
     def get_social_auth(cls, provider, uid):
-        if not isinstance(uid, six.string_types):
+        if not isinstance(uid, str):
             uid = str(uid)
         try:
             return cls._session().scalar(
-                cls._query().filter_by(provider=provider, uid=uid))
+                cls._query().filter_by(provider=provider, uid=uid)
+            )
         except IndexError:
             return None
 
@@ -189,14 +194,14 @@ class SQLAlchemyUserMixin(SQLAlchemyMixin, UserMixin):
 
     @classmethod
     def create_social_auth(cls, user, uid, provider):
-        if not isinstance(uid, six.string_types):
+        if not isinstance(uid, str):
             uid = str(uid)
         return cls._new_instance(cls, user=user, uid=uid, provider=provider)
 
 
 class SQLAlchemyNonceMixin(SQLAlchemyMixin, NonceMixin):
-    __tablename__ = 'social_auth_nonce'
-    __table_args__ = (UniqueConstraint('server_url', 'timestamp', 'salt'),)
+    __tablename__ = "social_auth_nonce"
+    __table_args__ = (UniqueConstraint("server_url", "timestamp", "salt"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     server_url: Mapped[str] = mapped_column(String(255))
@@ -205,8 +210,7 @@ class SQLAlchemyNonceMixin(SQLAlchemyMixin, NonceMixin):
 
     @classmethod
     def use(cls, server_url, timestamp, salt):
-        kwargs = {'server_url': server_url, 'timestamp': timestamp,
-                  'salt': salt}
+        kwargs = {"server_url": server_url, "timestamp": timestamp, "salt": salt}
         try:
             return cls._session().scalar(cls._query().filter_by(**kwargs))
         except IndexError:
@@ -214,8 +218,8 @@ class SQLAlchemyNonceMixin(SQLAlchemyMixin, NonceMixin):
 
 
 class SQLAlchemyAssociationMixin(SQLAlchemyMixin, AssociationMixin):
-    __tablename__ = 'social_auth_association'
-    __table_args__ = (UniqueConstraint('server_url', 'handle'),)
+    __tablename__ = "social_auth_association"
+    __table_args__ = (UniqueConstraint("server_url", "handle"),)
     id: Mapped[int] = mapped_column(primary_key=True)
     server_url: Mapped[str] = mapped_column(String(255))
     handle: Mapped[str] = mapped_column(String(255))
@@ -229,11 +233,12 @@ class SQLAlchemyAssociationMixin(SQLAlchemyMixin, AssociationMixin):
         # Don't use get_or_create because issued cannot be null
         try:
             assoc = cls._session().scalar(  # fix: skip
-                cls._query().filter_by(server_url=server_url,  # fix: skip
-                                       handle=association.handle))
+                cls._query().filter_by(
+                    server_url=server_url, handle=association.handle  # fix: skip
+                )
+            )
         except IndexError:
-            assoc = cls(server_url=server_url,
-                        handle=association.handle)
+            assoc = cls(server_url=server_url, handle=association.handle)
         assoc.secret = base64.encodebytes(association.secret).decode()
         assoc.issued = association.issued
         assoc.lifetime = association.lifetime
@@ -246,14 +251,16 @@ class SQLAlchemyAssociationMixin(SQLAlchemyMixin, AssociationMixin):
 
     @classmethod
     def remove(cls, ids_to_delete):
-        cls._session().execute(delete(
-            cls._query().where(cls.id.in_(ids_to_delete))
-        ).execution_options(synchronize_session="fetch"))
+        cls._session().execute(
+            delete(cls._query().where(cls.id.in_(ids_to_delete))).execution_options(
+                synchronize_session="fetch"
+            )
+        )
 
 
 class SQLAlchemyCodeMixin(SQLAlchemyMixin, CodeMixin):
-    __tablename__ = 'social_auth_code'
-    __table_args__ = (UniqueConstraint('code', 'email'),)
+    __tablename__ = "social_auth_code"
+    __table_args__ = (UniqueConstraint("code", "email"),)
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String(200))
     code: Mapped[str] = mapped_column(String(32), index=True)
@@ -264,11 +271,12 @@ class SQLAlchemyCodeMixin(SQLAlchemyMixin, CodeMixin):
 
 
 class SQLAlchemyPartialMixin(SQLAlchemyMixin, PartialMixin):
-    __tablename__ = 'social_auth_partial'
+    __tablename__ = "social_auth_partial"
     id: Mapped[int] = mapped_column(primary_key=True)
     token: Mapped[str] = mapped_column(String(32), index=True)
     data: Mapped[dict[str, str]] = mapped_column(  # fix: skip
-        MutableDict.as_mutable(JSONType))
+        MutableDict.as_mutable(JSONType)
+    )
     next_step: Mapped[int] = mapped_column()
     backend: Mapped[str] = mapped_column(String(32))
 
