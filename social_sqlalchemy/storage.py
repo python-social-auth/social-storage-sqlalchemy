@@ -2,7 +2,6 @@
 
 import base64
 import json
-from typing import Optional
 
 try:
     import transaction
@@ -26,8 +25,10 @@ from sqlalchemy.types import PickleType, Text
 
 
 class JSONPickler:
-    """JSON pickler wrapper around json lib since SQLAlchemy invokes
-    dumps with extra positional parameters"""
+    """
+    JSON pickler wrapper around json lib since SQLAlchemy invokes
+    dumps with extra positional parameters
+    """
 
     @classmethod
     def dumps(cls, value, *args, **kwargs):
@@ -101,7 +102,7 @@ class SQLAlchemyUserMixin(SQLAlchemyMixin, UserMixin):
     user = None
 
     @declared_attr
-    def extra_data(cls) -> Mapped[Optional[dict[str, str]]]:
+    def extra_data(cls) -> Mapped[dict[str, str] | None]:
         return mapped_column(MutableDict.as_mutable(JSONType))
 
     @classmethod
