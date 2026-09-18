@@ -13,7 +13,7 @@ into a project using SQLAlchemy as the storage solution.
 
 ## Documentation
 
-Project documentation is available at https://python-social-auth.readthedocs.io/.
+Project documentation is available at <https://python-social-auth.readthedocs.io/>.
 
 ## Setup
 
