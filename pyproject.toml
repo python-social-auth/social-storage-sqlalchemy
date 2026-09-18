@@ -4,21 +4,21 @@ requires = ["setuptools"]
 
 [project]
 authors = [
-  {email = "matiasaguirre@gmail.com", name = "Matias Aguirre"},
-  {email = "search5@gmail.com", name = "Lee Ji-ho"}
+  { email = "matiasaguirre@gmail.com", name = "Matias Aguirre" },
+  { email = "search5@gmail.com", name = "Lee Ji-ho" }
 ]
 classifiers = [
   'Development Status :: 4 - Beta',
   'Environment :: Web Environment',
   'Intended Audience :: Developers',
   'License :: OSI Approved :: BSD License',
+  'Programming Language :: Python',
   'Programming Language :: Python :: 3.10',
   'Programming Language :: Python :: 3.11',
   'Programming Language :: Python :: 3.12',
   'Programming Language :: Python :: 3.7',
   'Programming Language :: Python :: 3.8',
   'Programming Language :: Python :: 3.9',
-  'Programming Language :: Python',
   'Topic :: Internet'
 ]
 dependencies = [
@@ -29,7 +29,7 @@ dependencies = [
 description = 'Python Social Authentication, SQLAlchemy storage.'
 dynamic = ["version"]
 keywords = ["social auth", "sqlalchemy"]
-license = {text = 'BSD'}
+license = { text = 'BSD' }
 name = 'social-auth-storage-sqlalchemy'
 readme = "README.md"
 requires-python = ">= 3.7"
@@ -49,7 +49,7 @@ max-line-length = 80
 include-package-data = true
 
 [tool.setuptools.dynamic]
-version = {attr = "social_sqlalchemy.__version__"}
+version = { attr = "social_sqlalchemy.__version__" }
 
 [tool.setuptools.packages]
 find = {}
